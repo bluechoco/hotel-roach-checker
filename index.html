@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安心住宿小幫手 - 旅館評價查詢</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+P+One&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-pink: #FFC0CB; /* 櫻花粉 */
+            --secondary-blue: #ADD8E6; /* 淡藍色 */
+            --accent-yellow: #FFD700; /* 金色 */
+            --text-dark: #4B0082; /* 深紫羅蘭 */
+            --text-light: #FFFFFF;
+            --safe-color: #90EE90; /* 淡綠 */
+            --unsafe-color: #FA8072; /* 鮭魚粉 */
+            --border-color: #FFE4E1; /* 蜜桃泡泡 */
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--primary-pink) 100%);
+            color: var(--text-dark);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 25px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            border: 5px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 裝飾性元素 */
+        .container::before, .container::after {
+            content: '';
+            position: absolute;
+            background-color: var(--accent-yellow);
+            border-radius: 50%;
+            opacity: 0.3;
+            filter: blur(15px);
+            z-index: -1;
+        }
+        .container::before {
+            width: 100px;
+            height: 100px;
+            top: -30px;
+            left: -30px;
+        }
+        .container::after {
+            width: 80px;
+            height: 80px;
+            bottom: -20px;
+            right: -20px;
+        }
+
+        h1 {
+            font-family: 'Mochiy Pop P One', sans-serif;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 5px rgba(255, 192, 203, 0.5);
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 15px 20px;
+            border: 3px solid var(--primary-pink);
+            border-radius: 15px;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        button {
+            background-color: var(--primary-pink);
+            color: var(--text-light);
+            padding: 15px 30px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: var(--accent-yellow);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        #result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.5s ease;
+        }
+
+        #status {
+            font-family: 'Mochiy Pop P One', sans-serif;
+            font-size: 2.2em;
+            font-weight: bold;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        #reviews-summary {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            border: 2px dashed var(--secondary-blue);
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .review-item {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dotted var(--primary-pink);
+        }
+        .review-item:last-child {
+            border-bottom: none;
+        }
+        .review-date {
+            font-size: 0.9em;
+            color: #6A5ACD; /* 較淺的紫色 */
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ 安心住宿小幫手 ✨</h1>
+        <div class="input-group">
+            <input type="text" id="hotelName" placeholder="輸入旅館名稱 (例如: APA Hotel Akabane Iwabuchi Ekimae)">
+            <button onclick="searchHotel()">查詢</button>
+        </div>
+        <div id="result">
+            <p id="status">請輸入旅館名稱查詢...</p>
+            <div id="reviews-summary" style="display: none;">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        const hotelData = {
+            "APA Hotel Akabane Iwabuchi Ekimae": {
+                safe: true,
+                summary: []
+            },
+            "阿帕酒店赤羽岩淵站前": {
+                safe: true,
+                summary: []
+            },
+            "東橫INN 東京池袋北口": {
+                safe: false,
+                summary: [
+                    { text: "房間角落發現小強，清潔有待加強。", date: "2023年7月12日" },
+                    { text: "入住期間遇到蟑螂，令人不悅。", date: "2024年1月5日" }
+                ]
+            },
+            "Toyoko Inn Tokyo Ikebukuro Kita-guchi": {
+                safe: false,
+                summary: [
+                    { text: "Found a cockroach in the room corner, cleaning needs improvement.", date: "2023年7月12日" },
+                    { text: "Encountered a cockroach during my stay, unpleasant experience.", date: "2024年1月5日" }
+                ]
+            },
+            "大都會大飯店": {
+                safe: true,
+                summary: []
+            },
+            "Hotel Metropolitan Tokyo": {
+                safe: true,
+                summary: []
+            },
+            "神秘旅館": {
+                safe: false,
+                summary: [
+                    { text: "床底有蟑螂出沒，嚇壞了！", date: "2022年9月30日" },
+                    { text: "浴缸旁看到一隻大蟑螂，衛生堪憂。", date: "2023年3月15日" },
+                    { text: "NA", date: "NA" }
+                ]
+            }
+        };
+
+        function searchHotel() {
+            const hotelNameInput = document.getElementById('hotelName');
+            const statusElement = document.getElementById('status');
+            const reviewsSummaryElement = document.getElementById('reviews-summary');
+            const resultDiv = document.getElementById('result');
+            const searchTerm = hotelNameInput.value.trim();
+
+            if (searchTerm === "") {
+                statusElement.textContent = "請輸入旅館名稱查詢...";
+                resultDiv.style.backgroundColor = 'transparent';
+                reviewsSummaryElement.style.display = 'none';
+                return;
+            }
+
+            // 模糊匹配邏輯 (簡化版)
+            let matchedHotel = null;
+            let bestMatchKey = null;
+
+            for (const key in hotelData) {
+                if (key.toLowerCase().includes(searchTerm.toLowerCase()) || searchTerm.toLowerCase().includes(key.toLowerCase())) {
+                    matchedHotel = hotelData[key];
+                    bestMatchKey = key; // 記錄最接近的匹配
+                    break; 
+                }
+            }
+
+            reviewsSummaryElement.innerHTML = ''; // 清空之前的摘要
+
+            if (matchedHotel) {
+                if (matchedHotel.safe) {
+                    statusElement.textContent = "✅ 安全";
+                    resultDiv.style.backgroundColor = 'var(--safe-color)';
+                    reviewsSummaryElement.style.display = 'block';
+                    reviewsSummaryElement.innerHTML = '<p style="font-weight: bold; color: var(--text-dark);">目前未搜尋到蟑螂相關評價。</p>';
+                } else {
+                    statusElement.textContent = "⚠️ 不安全！";
+                    resultDiv.style.backgroundColor = 'var(--unsafe-color)';
+                    reviewsSummaryElement.style.display = 'block';
+                    if (matchedHotel.summary.length > 0) {
+                        matchedHotel.summary.forEach(review => {
+                            const reviewItem = document.createElement('div');
+                            reviewItem.className = 'review-item';
+                            reviewItem.innerHTML = `
+                                <p>"${review.text}"</p>
+                                <p class="review-date">日期: ${review.date}</p>
+                            `;
+                            reviewsSummaryElement.appendChild(reviewItem);
+                        });
+                    } else {
+                        reviewsSummaryElement.innerHTML = '<p style="font-weight: bold; color: var(--text-dark);">找到不安全資訊，但無具體評價摘要。</p>';
+                    }
+                }
+            } else {
+                statusElement.textContent = "✅ 安全 (目前未找到該旅館的評價)";
+                resultDiv.style.backgroundColor = 'var(--safe-color)';
+                reviewsSummaryElement.style.display = 'block';
+                reviewsSummaryElement.innerHTML = '<p style="font-weight: bold; color: var(--text-dark);">資料庫中未有此旅館的特定評價，預設為安全。</p>';
+            }
+        }
+    </script>
+</body>
+</html>
